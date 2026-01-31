@@ -41,47 +41,15 @@ function App() {
 
       const mediaType = file.type
 
-      // Call Claude API
-      const response = await fetch('https://api.anthropic.com/v1/messages', {
+      // Call our serverless function (avoids CORS issues)
+      const response = await fetch('/api/analyze-image', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
-          'x-api-key': import.meta.env.VITE_ANTHROPIC_API_KEY,
-          'anthropic-version': '2023-06-01'
         },
         body: JSON.stringify({
-          model: 'claude-sonnet-4-20250514',
-          max_tokens: 1000,
-          messages: [
-            {
-              role: 'user',
-              content: [
-                {
-                  type: 'image',
-                  source: {
-                    type: 'base64',
-                    media_type: mediaType,
-                    data: base64
-                  }
-                },
-                {
-                  type: 'text',
-                  text: `Analyze this Instagram/TikTok screenshot and extract place information. Look for location tags, place names in captions, text overlays, addresses, and restaurant/hotel/attraction names.
-
-Return ONLY valid JSON (no markdown, no code fences, no extra text) with this exact structure:
-{
-  "placeName": "Name of the place",
-  "city": "City name",
-  "country": "Country",
-  "description": "Brief description from caption or context",
-  "category": "restaurant/hotel/attraction/cafe/bar/other"
-}
-
-If no clear place is found, set placeName to null.`
-                }
-              ]
-            }
-          ]
+          image: base64,
+          mediaType: mediaType
         })
       })
 
@@ -163,23 +131,10 @@ If no clear place is found, set placeName to null.`
     setError(null)
   }
 
-  const apiKeySet = import.meta.env.VITE_ANTHROPIC_API_KEY && 
-                    import.meta.env.VITE_ANTHROPIC_API_KEY !== 'your_api_key_here'
-
   return (
     <div className="container">
       <h1>🌍 Travel Saver</h1>
       <p className="subtitle">Save your favorite travel destinations from Instagram & TikTok</p>
-
-      {!apiKeySet && (
-        <div className="setup-notice">
-          <h3>⚠️ API Key Required</h3>
-          <p>To use this app, you need to add your Anthropic API key as an environment variable.</p>
-          <p><strong>On Vercel:</strong> Go to Project Settings → Environment Variables</p>
-          <p><strong>Variable name:</strong> VITE_ANTHROPIC_API_KEY</p>
-          <p><strong>Get your key:</strong> <a href="https://console.anthropic.com" target="_blank">console.anthropic.com</a></p>
-        </div>
-      )}
 
       <div 
         className={`upload-zone ${dragOver ? 'dragover' : ''}`}
